@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Math Game</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .correct {
+      color: green;
+      font-size: 2rem;
+      font-weight: bold;
+      animation: correct 0.5s ease-in-out;
+    }
+
+    @keyframes correct {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.5); opacity: 0.5; }
+      100% { transform: scale(2); opacity: 0; }
+    }
+
+    .shake {
+      animation: shake 0.2s;
+      animation-iteration-count: 1;
+    }
+
+    @keyframes shake {
+      0% { transform: translate(1px, 1px) rotate(0deg); }
+      10% { transform: translate(-1px, -2px) rotate(-1deg); }
+      20% { transform: translate(-3px, 0px) rotate(1deg); }
+      30% { transform: translate(3px, 2px) rotate(0deg); }
+      40% { transform: translate(1px, -1px) rotate(1deg); }
+      50% { transform: translate(-1px, 2px) rotate(-1deg); }
+      60% { transform: translate(-3px, 1px) rotate(0deg); }
+      70% { transform: translate(3px, 1px) rotate(-1deg); }
+      80% { transform: translate(-1px, -1px) rotate(1deg); }
+      90% { transform: translate(1px, 2px) rotate(0deg); }
+      100% { transform: translate(1px, -2px) rotate(-1deg); }
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
+  <div class="text-center">
+    <h1 class="text-4xl mb-4">Math Game</h1>
+    <p id="problem" class="text-2xl mb-4"></p>
+    <input id="input" type="text" class="text-black p-2 text-xl" autocomplete="off" />
+    <div id="feedback" class="hidden"></div>
+    <p id="score" class="mt-4 text-xl">Score: 0</p>
+    <p id="time" class="mt-2 text-xl">Time: 60s</p>
+    <button id="restart" class="mt-4 p-2 bg-blue-500 text-white rounded hidden">Restart</button>
+    <h2 class="text-2xl mt-4">Scoreboard</h2>
+    <ul id="scoreboard" class="list-disc list-inside"></ul>
+  </div>
+
+  <script>
+    let currentProblem = {};
+    let score = 0;
+    let time = 60;
+    let interval;
+
+    const problemElement = document.getElementById("problem");
+    const inputElement = document.getElementById("input");
+    const scoreElement = document.getElementById("score");
+    const timeElement = document.getElementById("time");
+    const feedbackElement = document.getElementById("feedback");
+    const restartButton = document.getElementById("restart");
+    const scoreboardElement = document.getElementById("scoreboard");
+
+    function getRandomNumber(max) {
+      return Math.floor(Math.random() * max) + 1;
+    }
+
+    function generateProblem() {
+      const num1 = getRandomNumber(10);
+      const num2 = getRandomNumber(10);
+      const operator = ["+", "-", "*"][Math.floor(Math.random() * 3)];
+      const answer = eval(`${num1} ${operator} ${num2}`);
+      return { num1, num2, operator, answer };
+    }
+
+    function displayProblem() {
+      currentProblem = generateProblem();
+      problemElement.textContent = `${currentProblem.num1} ${currentProblem.operator} ${currentProblem.num2}`;
+    }
+
+    function startGame() {
+      score = 0;
+      time = 60;
+      displayProblem();
+      inputElement.value = "";
+      inputElement.disabled = false;
+      inputElement.focus();
+      scoreElement.textContent = `Score: ${score}`;
+      timeElement.textContent = `Time: ${time}s`;
+      restartButton.classList.add("hidden");
+      interval = setInterval(updateTime, 1000);
+    }
+
+    function updateTime() {
+      time--;
+      timeElement.textContent = `Time: ${time}s`;
+      if (time <= 0) {
+        clearInterval(interval);
+        inputElement.disabled = true;
+        problemElement.textContent = "Game Over!";
+        restartButton.classList.remove("hidden");
+        saveScore();
+        displayScores();
+      }
+    }
+
+    function saveScore() {
+      const scores = JSON.parse(localStorage.getItem("mathScores")) || [];
+      scores.push(score);
+      scores.sort((a, b) => b - a);
+      localStorage.setItem("mathScores", JSON.stringify(scores.slice(0, 5)));
+    }
+
+    function displayScores() {
+      const scores = JSON.parse(localStorage.getItem("mathScores")) || [];
+      scoreboardElement.innerHTML = scores.map((s, i) => `<li>${i + 1}. ${s}</li>`).join("");
+    }
+
+    inputElement.addEventListener("input", (e) => {
+      problemElement.classList.add("shake");
+      setTimeout(() => problemElement.classList.remove("shake"), 200);
+
+      if (parseInt(e.target.value) === currentProblem.answer) {
+        score++;
+        scoreElement.textContent = `Score: ${score}`;
+        feedbackElement.textContent = "Correct!";
+        feedbackElement.classList.remove("hidden");
+        feedbackElement.classList.add("correct");
+        setTimeout(() => {
+          feedbackElement.classList.add("hidden");
+          feedbackElement.classList.remove("correct");
+        }, 500);
+        displayProblem();
+        e.target.value = "";
+      }
+    });
+
+    restartButton.addEventListener("click", startGame);
+
+    displayScores();
+    startGame();
+  </script>
+</body>
+</html>
