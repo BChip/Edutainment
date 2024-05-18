@@ -191,6 +191,7 @@
       elements.forEach(element => {
         const elementDiv = document.createElement('div');
         elementDiv.className = 'element';
+        elementDiv.dataset.symbol = element.symbol; // Add dataset for exact matching
         elementDiv.innerHTML = `${element.symbol}
                                 <div class="tooltip">${element.description}</div>`;
         elementDiv.addEventListener('click', () => selectElement(element));
@@ -202,17 +203,13 @@
       const index = collectedElements.findIndex(el => el.symbol === element.symbol);
       if (index !== -1) {
         collectedElements.splice(index, 1);
-        document.querySelectorAll('.element').forEach(elDiv => {
-          if (elDiv.textContent.includes(element.symbol)) {
-            elDiv.classList.remove('selected-element');
-          }
+        document.querySelectorAll(`.element[data-symbol="${element.symbol}"]`).forEach(elDiv => {
+          elDiv.classList.remove('selected-element');
         });
       } else {
         collectedElements.push(element);
-        document.querySelectorAll('.element').forEach(elDiv => {
-          if (elDiv.textContent.includes(element.symbol)) {
-            elDiv.classList.add('selected-element');
-          }
+        document.querySelectorAll(`.element[data-symbol="${element.symbol}"]`).forEach(elDiv => {
+          elDiv.classList.add('selected-element');
         });
       }
       updateCollectedElements();
