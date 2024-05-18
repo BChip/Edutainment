@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>History Quiz Game</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .correct {
+      color: green;
+      font-size: 2rem;
+      font-weight: bold;
+      animation: correct 0.5s ease-in-out;
+    }
+
+    .incorrect {
+      color: red;
+      font-size: 2rem;
+      font-weight: bold;
+      animation: incorrect 0.5s ease-in-out;
+    }
+
+    @keyframes correct {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.5); opacity: 0.5; }
+      100% { transform: scale(2); opacity: 0; }
+    }
+
+    @keyframes incorrect {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.5); opacity: 0.5; }
+      100% { transform: scale(2); opacity: 0; }
+    }
+
+    .shake {
+      animation: shake 0.2s;
+      animation-iteration-count: 1;
+    }
+
+    @keyframes shake {
+      0% { transform: translate(1px, 1px) rotate(0deg); }
+      10% { transform: translate(-1px, -2px) rotate(-1deg); }
+      20% { transform: translate(-3px, 0px) rotate(1deg); }
+      30% { transform: translate(3px, 2px) rotate(0deg); }
+      40% { transform: translate(1px, -1px) rotate(1deg); }
+      50% { transform: translate(-1px, 2px) rotate(-1deg); }
+      60% { transform: translate(-3px, 1px) rotate(0deg); }
+      70% { transform: translate(3px, 1px) rotate(-1deg); }
+      80% { transform: translate(-1px, -1px) rotate(1deg); }
+      90% { transform: translate(1px, 2px) rotate(0deg); }
+      100% { transform: translate(1px, -2px) rotate(-1deg); }
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
+  <div class="text-center">
+    <h1 class="text-4xl mb-4">History Quiz Game</h1>
+    <p id="question" class="text-2xl mb-4"></p>
+    <div id="choices" class="mb-4">
+      <!-- Choices will be dynamically added here -->
+    </div>
+    <div id="feedback" class="hidden"></div>
+    <p id="score" class="mt-4 text-xl">Score: 0</p>
+    <p id="time" class="mt-2 text-xl">Time: 60s</p>
+    <button id="restart" class="mt-4 p-2 bg-blue-500 text-white rounded hidden">Restart</button>
+    <h2 class="text-2xl mt-4">Scoreboard</h2>
+    <ul id="scoreboard" class="list-disc list-inside"></ul>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        question: "Who was the first President of the United States?",
+        choices: ["George Washington", "Thomas Jefferson", "John Adams", "James Madison"],
+        answer: "George Washington"
+      },
+      {
+        question: "What year did World War II end?",
+        choices: ["1942", "1944", "1945", "1946"],
+        answer: "1945"
+      },
+      {
+        question: "Which ancient civilization built the pyramids?",
+        choices: ["Greek", "Roman", "Egyptian", "Mayan"],
+        answer: "Egyptian"
+      },
+      {
+        question: "Who wrote the Declaration of Independence?",
+        choices: ["George Washington", "Benjamin Franklin", "John Adams", "Thomas Jefferson"],
+        answer: "Thomas Jefferson"
+      },
+      {
+        question: "What was the name of the ship that brought the Pilgrims to America?",
+        choices: ["Mayflower", "Santa Maria", "Pinta", "Nina"],
+        answer: "Mayflower"
+      },
+      {
+        question: "Which year did the Titanic sink?",
+        choices: ["1910", "1912", "1914", "1916"],
+        answer: "1912"
+      },
+      {
+        question: "Who discovered penicillin?",
+        choices: ["Marie Curie", "Alexander Fleming", "Louis Pasteur", "Gregor Mendel"],
+        answer: "Alexander Fleming"
+      },
+      {
+        question: "What was the first successful powered airplane?",
+        choices: ["Spirit of St. Louis", "Flyer", "Enola Gay", "Boeing 747"],
+        answer: "Flyer"
+      },
+      {
+        question: "Who was the first man to step on the moon?",
+        choices: ["Buzz Aldrin", "Yuri Gagarin", "Neil Armstrong", "Michael Collins"],
+        answer: "Neil Armstrong"
+      },
+      {
+        question: "Which year did the Berlin Wall fall?",
+        choices: ["1987", "1988", "1989", "1990"],
+        answer: "1989"
+      },
+      {
+        question: "Who was the first female Prime Minister of the United Kingdom?",
+        choices: ["Theresa May", "Margaret Thatcher", "Angela Merkel", "Indira Gandhi"],
+        answer: "Margaret Thatcher"
+      },
+      {
+        question: "Which ancient city was known as Byzantium?",
+        choices: ["Athens", "Rome", "Istanbul", "Carthage"],
+        answer: "Istanbul"
+      },
+      {
+        question: "Which empire was ruled by Julius Caesar?",
+        choices: ["Macedonian", "Roman", "Persian", "Ottoman"],
+        answer: "Roman"
+      },
+      {
+        question: "Who was the first person to circumnavigate the globe?",
+        choices: ["Christopher Columbus", "Ferdinand Magellan", "James Cook", "Vasco da Gama"],
+        answer: "Ferdinand Magellan"
+      },
+      {
+        question: "What was the original name of New York City?",
+        choices: ["New Amsterdam", "New London", "New Paris", "New Madrid"],
+        answer: "New Amsterdam"
+      }
+      // Add more questions as needed
+    ];
+    let currentQuestion = {};
+    let score = 0;
+    let time = 60;
+    let interval;
+
+    const questionElement = document.getElementById("question");
+    const choicesElement = document.getElementById("choices");
+    const scoreElement = document.getElementById("score");
+    const timeElement = document.getElementById("time");
+    const feedbackElement = document.getElementById("feedback");
+    const restartButton = document.getElementById("restart");
+    const scoreboardElement = document.getElementById("scoreboard");
+
+    function getRandomQuestion() {
+      return questions[Math.floor(Math.random() * questions.length)];
+    }
+
+    function displayQuestion() {
+      currentQuestion = getRandomQuestion();
+      questionElement.textContent = currentQuestion.question;
+      choicesElement.innerHTML = "";
+      currentQuestion.choices.forEach(choice => {
+        const button = document.createElement("button");
+        button.textContent = choice;
+        button.className = "bg-gray-700 text-white p-2 m-2 rounded";
+        button.addEventListener("click", () => checkAnswer(choice));
+        choicesElement.appendChild(button);
+      });
+    }
+
+    function checkAnswer(selectedChoice) {
+      if (selectedChoice === currentQuestion.answer) {
+        score++;
+        feedbackElement.textContent = "Correct!";
+        feedbackElement.classList.remove("hidden");
+        feedbackElement.classList.add("correct");
+        setTimeout(() => {
+          feedbackElement.classList.add("hidden");
+          feedbackElement.classList.remove("correct");
+        }, 500);
+      } else {
+        score--;
+        feedbackElement.textContent = "Incorrect!";
+        feedbackElement.classList.remove("hidden");
+        feedbackElement.classList.add("incorrect");
+        setTimeout(() => {
+          feedbackElement.classList.add("hidden");
+          feedbackElement.classList.remove("incorrect");
+        }, 500);
+      }
+      scoreElement.textContent = `Score: ${score}`;
+      displayQuestion();
+    }
+
+    function startGame() {
+      score = 0;
+      time = 60;
+      displayQuestion();
+      scoreElement.textContent = `Score: ${score}`;
+      timeElement.textContent = `Time: ${time}s`;
+      restartButton.classList.add("hidden");
+      interval = setInterval(updateTime, 1000);
+    }
+
+    function updateTime() {
+      time--;
+      timeElement.textContent = `Time: ${time}s`;
+      if (time <= 0) {
+        clearInterval(interval);
+        choicesElement.innerHTML = "";
+        questionElement.textContent = "Game Over!";
+        restartButton.classList.remove("hidden");
+        saveScore();
+        displayScores();
+      }
+    }
+
+    function saveScore() {
+      const scores = JSON.parse(localStorage.getItem("historyScores")) || [];
+      scores.push(score);
+      scores.sort((a, b) => b - a);
+      localStorage.setItem("historyScores", JSON.stringify(scores.slice(0, 5)));
+    }
+
+    function displayScores() {
+      const scores = JSON.parse(localStorage.getItem("historyScores")) || [];
+      scoreboardElement.innerHTML = scores.map((s, i) => `<li>${i + 1}. ${s}</li>`).join("");
+    }
+
+    restartButton.addEventListener("click", startGame);
+
+    displayScores();
+    startGame();
+  </script>
+</body>
+</html>
