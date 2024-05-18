@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chemistry Synthesis</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .periodic-table {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 5px;
+      padding: 20px;
+      background-color: #2d3748;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .element {
+      padding: 15px;
+      background-color: #4a5568;
+      color: white;
+      text-align: center;
+      cursor: pointer;
+      border-radius: 5px;
+      position: relative;
+      transition: background-color 0.3s;
+    }
+    .element:hover {
+      background-color: #68d391;
+    }
+    .selected-element {
+      background-color: #48bb78;
+      margin: 5px;
+    }
+    .tooltip {
+      visibility: hidden;
+      width: 200px;
+      background-color: #555;
+      color: #fff;
+      text-align: center;
+      border-radius: 6px;
+      padding: 5px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%; /* Position the tooltip above the text */
+      left: 50%;
+      margin-left: -100px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .element:hover .tooltip {
+      visibility: visible;
+      opacity: 1;
+    }
+    .tooltip::after {
+      content: "";
+      position: absolute;
+      top: 100%; /* At the bottom of the tooltip */
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #555 transparent transparent transparent;
+    }
+    .lab-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+    }
+    .elements-list, .experiment, .info {
+      width: 100%;
+      max-width: 600px;
+      margin: 10px;
+      padding: 20px;
+      border: 2px solid #4a5568;
+      border-radius: 8px;
+      background-color: #2d3748;
+      color: white;
+    }
+    .elements-list h2, .experiment h2, .info h2 {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen">
+  <header class="mb-8 text-center">
+    <h1 class="text-4xl font-bold">Chemistry Synthesis</h1>
+    <p class="text-xl mt-2">Learn and play with the elements!</p>
+  </header>
+  <main class="w-full max-w-6xl">
+    <div class="periodic-table" id="periodic-table">
+      <!-- Elements will be dynamically added here -->
+    </div>
+    <div class="lab-container">
+      <div class="elements-list" id="elements-list">
+        <h2>Your Selected Elements</h2>
+        <!-- Collected elements will be displayed here -->
+      </div>
+      <div class="experiment" id="experiment">
+        <h2>Experiment Result</h2>
+        <p id="reaction-result">Select elements to see if they form a compound.</p>
+      </div>
+      <div class="info" id="info">
+        <h2>Information</h2>
+        <!-- Information about selected element or experiment will be displayed here -->
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const elements = [
+      { symbol: 'C', name: 'Carbon', atomicNumber: 6, description: 'Carbon is a chemical element with symbol C and atomic number 6.' },
+      { symbol: 'H', name: 'Hydrogen', atomicNumber: 1, description: 'Hydrogen is a chemical element with symbol H and atomic number 1.' },
+      { symbol: 'O', name: 'Oxygen', atomicNumber: 8, description: 'Oxygen is a chemical element with symbol O and atomic number 8.' },
+      { symbol: 'N', name: 'Nitrogen', atomicNumber: 7, description: 'Nitrogen is a chemical element with symbol N and atomic number 7.' },
+      { symbol: 'Na', name: 'Sodium', atomicNumber: 11, description: 'Sodium is a chemical element with symbol Na and atomic number 11.' },
+      { symbol: 'Cl', name: 'Chlorine', atomicNumber: 17, description: 'Chlorine is a chemical element with symbol Cl and atomic number 17.' },
+      { symbol: 'K', name: 'Potassium', atomicNumber: 19, description: 'Potassium is a chemical element with symbol K and atomic number 19.' },
+      { symbol: 'Ca', name: 'Calcium', atomicNumber: 20, description: 'Calcium is a chemical element with symbol Ca and atomic number 20.' },
+      { symbol: 'Fe', name: 'Iron', atomicNumber: 26, description: 'Iron is a chemical element with symbol Fe and atomic number 26.' },
+      { symbol: 'Mg', name: 'Magnesium', atomicNumber: 12, description: 'Magnesium is a chemical element with symbol Mg and atomic number 12.' },
+      { symbol: 'S', name: 'Sulfur', atomicNumber: 16, description: 'Sulfur is a chemical element with symbol S and atomic number 16.' },
+      { symbol: 'P', name: 'Phosphorus', atomicNumber: 15, description: 'Phosphorus is a chemical element with symbol P and atomic number 15.' },
+    ];
+
+    const compounds = {
+      'Polyethylene': {
+        formula: ['C', 'H'],
+        description: 'Polyethylene is a common plastic material used in various products.',
+      },
+      'Aspirin': {
+        formula: ['C', 'H', 'O'],
+        description: 'Aspirin (C8H10O4) is a medication used to reduce pain, fever, or inflammation.',
+      },
+      'Water': {
+        formula: ['H', 'O'],
+        description: 'Water (H2O) is essential for all known forms of life.',
+      },
+      'Carbon Dioxide': {
+        formula: ['C', 'O'],
+        description: 'Carbon dioxide (CO2) is a greenhouse gas that is a major contributor to global warming.',
+      },
+      'Table Salt': {
+        formula: ['Na', 'Cl'],
+        description: 'Table salt (NaCl) is commonly used in food preparation.',
+      },
+      'Magnesium Oxide': {
+        formula: ['Mg', 'O'],
+        description: 'Magnesium oxide (MgO) is used in various industrial applications.',
+      },
+      'Iron Oxide': {
+        formula: ['Fe', 'O'],
+        description: 'Iron oxide (FeO) is commonly known as rust.',
+      },
+      'Calcium Carbonate': {
+        formula: ['Ca', 'C', 'O'],
+        description: 'Calcium carbonate (CaCO3) is a common substance found in rocks.',
+      },
+      'Sulfuric Acid': {
+        formula: ['H', 'S', 'O'],
+        description: 'Sulfuric acid (H2SO4) is a strong acid used in various industrial processes.',
+      },
+      'Ammonia': {
+        formula: ['N', 'H'],
+        description: 'Ammonia (NH3) is a compound used in fertilizers and cleaning products.',
+      },
+      'Phosphoric Acid': {
+        formula: ['H', 'P', 'O'],
+        description: 'Phosphoric acid (H3PO4) is used in fertilizers and food flavoring.',
+      },
+      'Potassium Chloride': {
+        formula: ['K', 'Cl'],
+        description: 'Potassium chloride (KCl) is used in medicine and as a salt substitute.',
+      },
+      'Calcium Phosphate': {
+        formula: ['Ca', 'P', 'O'],
+        description: 'Calcium phosphate (Ca3(PO4)2) is a major component of bones and teeth.',
+      },
+    };
+
+    const periodicTableElement = document.getElementById('periodic-table');
+    const elementsListElement = document.getElementById('elements-list');
+    const experimentElement = document.getElementById('experiment');
+    const reactionResultElement = document.getElementById('reaction-result');
+    const infoElement = document.getElementById('info');
+    let collectedElements = [];
+
+    function renderPeriodicTable() {
+      elements.forEach(element => {
+        const elementDiv = document.createElement('div');
+        elementDiv.className = 'element';
+        elementDiv.innerHTML = `${element.symbol}
+                                <div class="tooltip">${element.description}</div>`;
+        elementDiv.addEventListener('click', () => selectElement(element));
+        periodicTableElement.appendChild(elementDiv);
+      });
+    }
+
+    function selectElement(element) {
+      const index = collectedElements.findIndex(el => el.symbol === element.symbol);
+      if (index !== -1) {
+        collectedElements.splice(index, 1);
+        document.querySelectorAll('.element').forEach(elDiv => {
+          if (elDiv.textContent.includes(element.symbol)) {
+            elDiv.classList.remove('selected-element');
+          }
+        });
+      } else {
+        collectedElements.push(element);
+        document.querySelectorAll('.element').forEach(elDiv => {
+          if (elDiv.textContent.includes(element.symbol)) {
+            elDiv.classList.add('selected-element');
+          }
+        });
+      }
+      updateCollectedElements();
+      conductExperiment();
+    }
+
+    function updateCollectedElements() {
+      elementsListElement.innerHTML = '<h2>Your Selected Elements</h2>';
+      collectedElements.forEach(element => {
+        const elementDiv = document.createElement('div');
+        elementDiv.className = 'element selected-element';
+        elementDiv.textContent = element.symbol;
+        elementsListElement.appendChild(elementDiv);
+      });
+    }
+
+    function conductExperiment() {
+      const formula = collectedElements.reduce((acc, el) => {
+        const existingElement = acc.find(e => e.symbol === el.symbol);
+        if (existingElement) {
+          existingElement.count++;
+        } else {
+          acc.push({ symbol: el.symbol, count: 1 });
+        }
+        return acc;
+      }, []).map(el => `${el.symbol}${el.count > 1 ? el.count : ''}`).sort().join('');
+      
+      const compound = Object.keys(compounds).find(name => {
+        const compoundFormula = compounds[name].formula.sort().join('');
+        return compoundFormula === formula;
+      });
+
+      if (compound) {
+        reactionResultElement.innerHTML = `<p>${compound} synthesized!</p><p>${compounds[compound].description}</p>`;
+        displayCompoundInfo(compound);
+      } else {
+        reactionResultElement.innerHTML = `<p>Collected ${collectedElements.length} elements. Keep collecting to form a compound!</p>`;
+        infoElement.textContent = '';
+      }
+    }
+
+    function displayCompoundInfo(compound) {
+      const compoundInfo = compounds[compound];
+      infoElement.innerHTML = `<h2>${compound}</h2><p>${compoundInfo.description}</p><p>Formula: ${compoundInfo.formula.join(', ')}</p>`;
+    }
+
+    renderPeriodicTable();
+  </script>
+</body>
+</html>
