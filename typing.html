@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Typing Game</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    @keyframes shake {
+      0% { transform: translate(1px, 1px) rotate(0deg); }
+      10% { transform: translate(-1px, -2px) rotate(-1deg); }
+      20% { transform: translate(-3px, 0px) rotate(1deg); }
+      30% { transform: translate(3px, 2px) rotate(0deg); }
+      40% { transform: translate(1px, -1px) rotate(1deg); }
+      50% { transform: translate(-1px, 2px) rotate(-1deg); }
+      60% { transform: translate(-3px, 1px) rotate(0deg); }
+      70% { transform: translate(3px, 1px) rotate(-1deg); }
+      80% { transform: translate(-1px, -1px) rotate(1deg); }
+      90% { transform: translate(1px, 2px) rotate(0deg); }
+      100% { transform: translate(1px, -2px) rotate(-1deg); }
+    }
+
+    .shake {
+      animation: shake 0.2s;
+      animation-iteration-count: 1;
+    }
+
+    .explosion {
+      color: red;
+      font-size: 2rem;
+      font-weight: bold;
+      animation: explosion 0.5s ease-in-out;
+    }
+
+    @keyframes explosion {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.5); opacity: 0.5; }
+      100% { transform: scale(2); opacity: 0; }
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
+  <div class="text-center">
+    <h1 class="text-4xl mb-4">Typing Game</h1>
+    <p id="word" class="text-2xl mb-4"></p>
+    <input id="input" type="text" class="text-black p-2 text-xl" autocomplete="off" />
+    <div id="explosion" class="hidden"></div>
+    <p id="score" class="mt-4 text-xl">Score: 0</p>
+    <p id="time" class="mt-2 text-xl">Time: 60s</p>
+    <button id="restart" class="mt-4 p-2 bg-blue-500 text-white rounded hidden">Restart</button>
+    <h2 class="text-2xl mt-4">Scoreboard</h2>
+    <ul id="scoreboard" class="list-disc list-inside"></ul>
+  </div>
+
+  <script>
+    const words = [
+  "Pneumonoultramicroscopicsilicovolcanoconiosis",
+  "Hippopotomonstrosesquippedaliophobia",
+  "Floccinaucinihilipilification",
+  "Sesquipedalian",
+  "Antidisestablishmentarianism",
+  "Honorificabilitudinitatibus",
+  "Thyroparathyroidectomized",
+  "Dichlorodifluoromethane",
+  "Bababadalgharaghtakamminarronnkonnbronntonnerronntuonnthunntrovarrhounawnskawntoohoohoordenenthurnuk",
+  "Absquatulate",
+  "Pericombobulation",
+  "Magnanimous",
+  "Unencumbered",
+  "Circumlocution",
+  "Onomatopoeia",
+  "Verisimilitude",
+  "Quattuordecillion",
+  "Xanthosis",
+  "Zygodactylous",
+  "Quixotic",
+  "Galanthophile",
+  "Juxtaposition",
+  "Symbiosis",
+  "Xenotransplantation",
+  "Autochthonous",
+  "Quintessential",
+  "Aquiclude",
+  "Zephyr",
+  "Mellifluous",
+  "Serendipity",
+  "Ephemeral",
+  "Onomatopoeia",
+  "Idiosyncratic",
+  "Quintessential",
+  "Diaphanous",
+  "Phantasmagorical",
+  "Ubiquitous",
+  "Pulchritudinous",
+  "Defenestration",
+  "Logorrhea",
+  "Quagmire",
+  "Scintillating",
+  "Xenodochial",
+  "Schadenfreude",
+  "Labyrinthine",
+  "Incandescent",
+  "Chrysanthemum",
+  "Bougainvillea",
+  "Lachrymal",
+  "Metamorphosis",
+  "Kaleidoscope",
+  "Guerrilla",
+  "Silhouette",
+  "Renaissance",
+  "Millennium",
+  "Inoculate",
+  "Perspicacious",
+  "Insouciant",
+  "Translucent",
+  "Hegemony",
+  "Nonchalant",
+  "Metamorphosis",
+  "Luminescence",
+  "Chrysalis",
+  "Iridescent",
+  "Rhapsodic",
+  "Fluorescent",
+  "Phantasmagorical",
+  "Crepuscular",
+  "Phosphorescent",
+  "Effervescent",
+  "Quintessence",
+  "Bioluminescence",
+  "Quintessential",
+  "Incandescence",
+  "Diaphanous",
+  "Coruscate",
+  "Evanescent",
+  "Scintillate",
+  "Serendipitous",
+  "Gossamer",
+  "Labyrinthine",
+  "Mellifluous",
+  "Efflorescent",
+  "Ephemeral",
+  "Halcyon",
+  "Cherubic",
+  "Ebullient",
+  "Felicitous",
+  "Ineffable",
+  "Limerence",
+  "Sumptuous",
+  "Melancholia",
+  "Petrichor",
+  "Sempiternal",
+  "Elysian",
+  "Ethereal",
+  "Hiraeth",
+  "Labyrinthian",
+  "Nemesis",
+  "Cynosure",
+  "Seraglio"
+];
+    let currentWord = "";
+    let score = 0;
+    let time = 60;
+    let interval;
+
+    const wordElement = document.getElementById("word");
+    const inputElement = document.getElementById("input");
+    const scoreElement = document.getElementById("score");
+    const timeElement = document.getElementById("time");
+    const explosionElement = document.getElementById("explosion");
+    const restartButton = document.getElementById("restart");
+    const scoreboardElement = document.getElementById("scoreboard");
+
+    function getRandomWord() {
+      return words[Math.floor(Math.random() * words.length)];
+    }
+
+    function startGame() {
+      score = 0;
+      time = 60;
+      currentWord = getRandomWord();
+      wordElement.textContent = currentWord;
+      inputElement.value = "";
+      inputElement.disabled = false;
+      inputElement.focus();
+      scoreElement.textContent = `Score: ${score}`;
+      timeElement.textContent = `Time: ${time}s`;
+      restartButton.classList.add("hidden");
+      interval = setInterval(updateTime, 1000);
+    }
+
+    function updateTime() {
+      time--;
+      timeElement.textContent = `Time: ${time}s`;
+      if (time <= 0) {
+        clearInterval(interval);
+        inputElement.disabled = true;
+        wordElement.textContent = "Game Over!";
+        restartButton.classList.remove("hidden");
+        saveScore();
+        displayScores();
+      }
+    }
+
+    function saveScore() {
+      const scores = JSON.parse(localStorage.getItem("scores")) || [];
+      scores.push(score);
+      scores.sort((a, b) => b - a);
+      localStorage.setItem("scores", JSON.stringify(scores.slice(0, 5)));
+    }
+
+    function displayScores() {
+      const scores = JSON.parse(localStorage.getItem("scores")) || [];
+      scoreboardElement.innerHTML = scores.map((s, i) => `<li>${i + 1}. ${s}</li>`).join("");
+    }
+
+    inputElement.addEventListener("input", (e) => {
+      wordElement.classList.add("shake");
+      setTimeout(() => wordElement.classList.remove("shake"), 200);
+
+      if (e.target.value === currentWord) {
+        score++;
+        scoreElement.textContent = `Score: ${score}`;
+        explosionElement.textContent = "Boom!";
+        explosionElement.classList.remove("hidden");
+        explosionElement.classList.add("explosion");
+        setTimeout(() => {
+          explosionElement.classList.add("hidden");
+          explosionElement.classList.remove("explosion");
+        }, 500);
+        currentWord = getRandomWord();
+        wordElement.textContent = currentWord;
+        e.target.value = "";
+      }
+    });
+
+    restartButton.addEventListener("click", startGame);
+
+    displayScores();
+    startGame();
+  </script>
+</body>
+</html>
