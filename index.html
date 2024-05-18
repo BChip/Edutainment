@@ -8,6 +8,9 @@
   <style>
     .game-card {
       transition: transform 0.2s;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
     .game-card:hover {
       transform: scale(1.05);
@@ -21,19 +24,25 @@
   </header>
   <main class="flex flex-wrap justify-center">
     <div class="game-card bg-blue-500 p-6 m-4 rounded-lg shadow-lg w-64 text-center">
-      <h2 class="text-2xl font-bold mb-2">Typing Game</h2>
-      <p class="mb-4">Improve your typing skills with our fun typing game!</p>
-      <a href="/typing.html" class="bg-white text-blue-500 px-4 py-2 rounded">Play Now</a>
+      <div>
+        <h2 class="text-2xl font-bold mb-2">Typing Game</h2>
+        <p class="mb-4">Improve your typing skills with our fun typing game!</p>
+      </div>
+      <a href="/typing.html" class="bg-white text-blue-500 px-4 py-2 rounded mt-auto">Play Now</a>
     </div>
     <div class="game-card bg-green-500 p-6 m-4 rounded-lg shadow-lg w-64 text-center">
-      <h2 class="text-2xl font-bold mb-2">Math Game</h2>
-      <p class="mb-4">Sharpen your math skills with our challenging math game!</p>
-      <a href="/add-sub-mult.html" class="bg-white text-green-500 px-4 py-2 rounded">Play Now</a>
+      <div>
+        <h2 class="text-2xl font-bold mb-2">Math Game</h2>
+        <p class="mb-4">Sharpen your math skills with our challenging math game!</p>
+      </div>
+      <a href="/add-sub-mult.html" class="bg-white text-green-500 px-4 py-2 rounded mt-auto">Play Now</a>
     </div>
     <div class="game-card bg-red-500 p-6 m-4 rounded-lg shadow-lg w-64 text-center">
-      <h2 class="text-2xl font-bold mb-2">Grammar and Punctuation Game</h2>
-      <p class="mb-4">Improve your grammar and punctuation skills with our fun correction game!</p>
-      <a href="/grammar-punctuation.html" class="bg-white text-red-500 px-4 py-2 rounded">Play Now</a>
+      <div>
+        <h2 class="text-2xl font-bold mb-2">Punctuation Game</h2>
+        <p class="mb-4">Improve your punctuation skills with our fun correction game!</p>
+      </div>
+      <a href="/grammar-punctuation.html" class="bg-white text-red-500 px-4 py-2 rounded mt-auto">Play Now</a>
     </div>
   </main>
   <footer class="mt-8">
