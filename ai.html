@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Learning Game</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .feedback {
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+      animation-duration: 0.5s;
+      animation-timing-function: ease-in-out;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .correct {
+      color: green;
+      animation-name: correct;
+    }
+
+    .incorrect {
+      color: red;
+      animation-name: incorrect;
+    }
+
+    @keyframes correct {
+      0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      50% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.5; }
+      100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+    }
+
+    @keyframes incorrect {
+      0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      50% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.5; }
+      100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen relative">
+  <div class="text-center">
+    <h1 class="text-4xl mb-4">AI Learning Game</h1>
+    <p id="question" class="text-2xl mb-4"></p>
+    <div id="choices" class="mb-4">
+      <!-- Choices will be dynamically added here -->
+    </div>
+    <div id="feedback" class="feedback hidden"></div>
+    <p id="score" class="mt-4 text-xl">Score: 0</p>
+    <p id="time" class="mt-2 text-xl">Time: 60s</p>
+    <button id="restart" class="mt-4 p-2 bg-blue-500 text-white rounded hidden">Restart</button>
+    <h2 class="text-2xl mt-4">Scoreboard</h2>
+    <ul id="scoreboard" class="list-disc list-inside"></ul>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        question: "What does AI stand for?",
+        choices: ["Artificial Intelligence", "Artificial Integration", "Automated Interaction", "Automated Intelligence"],
+        answer: "Artificial Intelligence"
+      },
+      {
+        question: "Which of the following is an example of AI?",
+        choices: ["A light switch", "A self-driving car", "A bicycle", "A pencil"],
+        answer: "A self-driving car"
+      },
+      {
+        question: "Which of these can AI do?",
+        choices: ["Write code", "Play chess", "Recognize faces", "All of the above"],
+        answer: "All of the above"
+      },
+      {
+        question: "What is Machine Learning?",
+        choices: ["Teaching machines to learn from data", "Teaching humans to learn from machines", "Programming machines to walk", "None of the above"],
+        answer: "Teaching machines to learn from data"
+      },
+      {
+        question: "Which of these is a popular AI language?",
+        choices: ["Python", "HTML", "CSS", "JavaScript"],
+        answer: "Python"
+      },
+      {
+        question: "What is a neural network?",
+        choices: ["A network of neurons in the brain", "A type of AI that mimics the human brain", "A network of computers", "A social network for AI"],
+        answer: "A type of AI that mimics the human brain"
+      },
+      {
+        question: "Which of these is not a type of AI?",
+        choices: ["Supervised Learning", "Unsupervised Learning", "Reinforcement Learning", "Imaginative Learning"],
+        answer: "Imaginative Learning"
+      },
+      {
+        question: "What does NLP stand for in AI?",
+        choices: ["Natural Language Processing", "Neural Learning Program", "Network Learning Processing", "None of the above"],
+        answer: "Natural Language Processing"
+      },
+      {
+        question: "Which AI technology is used for speech recognition?",
+        choices: ["Image Recognition", "Natural Language Processing", "Machine Learning", "Deep Learning"],
+        answer: "Natural Language Processing"
+      },
+      {
+        question: "Which company is known for developing the AI assistant called Siri?",
+        choices: ["Google", "Amazon", "Apple", "Microsoft"],
+        answer: "Apple"
+      }
+      // Add more questions as needed
+    ];
+    let currentQuestion = {};
+    let score = 0;
+    let time = 60;
+    let interval;
+
+    const questionElement = document.getElementById("question");
+    const choicesElement = document.getElementById("choices");
+    const scoreElement = document.getElementById("score");
+    const timeElement = document.getElementById("time");
+    const feedbackElement = document.getElementById("feedback");
+    const restartButton = document.getElementById("restart");
+    const scoreboardElement = document.getElementById("scoreboard");
+
+    function getRandomQuestion() {
+      return questions[Math.floor(Math.random() * questions.length)];
+    }
+
+    function displayQuestion() {
+      currentQuestion = getRandomQuestion();
+      questionElement.textContent = currentQuestion.question;
+      choicesElement.innerHTML = "";
+      currentQuestion.choices.forEach(choice => {
+        const button = document.createElement("button");
+        button.textContent = choice;
+        button.className = "bg-gray-700 text-white p-2 m-2 rounded";
+        button.addEventListener("click", () => checkAnswer(choice));
+        choicesElement.appendChild(button);
+      });
+    }
+
+    function checkAnswer(selectedChoice) {
+      if (selectedChoice === currentQuestion.answer) {
+        score++;
+        feedbackElement.textContent = "Correct!";
+        feedbackElement.className = "feedback correct";
+        feedbackElement.classList.remove("hidden");
+        setTimeout(() => {
+          feedbackElement.classList.add("hidden");
+        }, 500);
+      } else {
+        score--;
+        feedbackElement.textContent = "Incorrect!";
+        feedbackElement.className = "feedback incorrect";
+        feedbackElement.classList.remove("hidden");
+        setTimeout(() => {
+          feedbackElement.classList.add("hidden");
+        }, 500);
+      }
+      scoreElement.textContent = `Score: ${score}`;
+      displayQuestion();
+    }
+
+    function startGame() {
+      score = 0;
+      time = 60;
+      displayQuestion();
+      scoreElement.textContent = `Score: ${score}`;
+      timeElement.textContent = `Time: ${time}s`;
+      restartButton.classList.add("hidden");
+      interval = setInterval(updateTime, 1000);
+    }
+
+    function updateTime() {
+      time--;
+      timeElement.textContent = `Time: ${time}s`;
+      if (time <= 0) {
+        clearInterval(interval);
+        choicesElement.innerHTML = "";
+        questionElement.textContent = "Game Over!";
+        restartButton.classList.remove("hidden");
+        saveScore();
+        displayScores();
+      }
+    }
+
+    function saveScore() {
+      const scores = JSON.parse(localStorage.getItem("aiScores")) || [];
+      scores.push(score);
+      scores.sort((a, b) => b - a);
+      localStorage.setItem("aiScores", JSON.stringify(scores.slice(0, 5)));
+    }
+
+    function displayScores() {
+      const scores = JSON.parse(localStorage.getItem("aiScores")) || [];
+      scoreboardElement.innerHTML = scores.map((s, i) => `<li>${i + 1}. ${s}</li>`).join("");
+    }
+
+    restartButton.addEventListener("click", startGame);
+
+    displayScores();
+    startGame();
+  </script>
+</body>
+</html>
