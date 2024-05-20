@@ -3,31 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Learning Game</title>
+  <title>AI Quiz Game</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
-    .feedback {
-      color: white;
+    .correct {
+      color: green;
       font-size: 2rem;
       font-weight: bold;
-      animation-duration: 0.5s;
-      animation-timing-function: ease-in-out;
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      pointer-events: none;
-      white-space: nowrap;
-    }
-
-    .correct {
-      color: green;
-      animation-name: correct;
+      animation: correct 0.5s ease-in-out;
+      z-index: 10;
     }
 
     .incorrect {
       color: red;
-      animation-name: incorrect;
+      font-size: 2rem;
+      font-weight: bold;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: incorrect 0.5s ease-in-out;
+      z-index: 10;
     }
 
     @keyframes correct {
@@ -41,21 +41,49 @@
       50% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.5; }
       100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
     }
+
+    .hidden {
+      display: none;
+    }
+
+    .choices {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .choice {
+      background-color: #4a5568;
+      padding: 10px;
+      margin: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+    }
+
+    .choice:hover {
+      background-color: #68d391;
+    }
   </style>
 </head>
-<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen relative">
-  <div class="text-center">
-    <h1 class="text-4xl mb-4">AI Learning Game</h1>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
+  <div class="text-center relative">
+    <h1 class="text-4xl mb-4">AI Quiz Game</h1>
     <p id="question" class="text-2xl mb-4"></p>
     <div id="choices" class="mb-4">
       <!-- Choices will be dynamically added here -->
     </div>
-    <div id="feedback" class="feedback hidden"></div>
+    <div id="feedback" class="hidden"></div>
     <p id="score" class="mt-4 text-xl">Score: 0</p>
     <p id="time" class="mt-2 text-xl">Time: 60s</p>
+    <div id="summary" class="hidden mt-4">
+      <h2 class="text-2xl mb-4">Summary of Questions</h2>
+      <ol id="summary-list" class="list-inside"></ul>
+    </div>
     <button id="restart" class="mt-4 p-2 bg-blue-500 text-white rounded hidden">Restart</button>
     <h2 class="text-2xl mt-4">Scoreboard</h2>
-    <ul id="scoreboard" class="list-disc list-inside"></ul>
+    <ul id="scoreboard" class="list-inside"></ul>
   </div>
 
   <script>
@@ -109,13 +137,14 @@
         question: "Which company is known for developing the AI assistant called Siri?",
         choices: ["Google", "Amazon", "Apple", "Microsoft"],
         answer: "Apple"
-      }
-      // Add more questions as needed
-    ];
+      }];
+
     let currentQuestion = {};
     let score = 0;
     let time = 60;
     let interval;
+    let usedQuestions = [];
+    let answeredQuestions = [];
 
     const questionElement = document.getElementById("question");
     const choicesElement = document.getElementById("choices");
@@ -124,9 +153,16 @@
     const feedbackElement = document.getElementById("feedback");
     const restartButton = document.getElementById("restart");
     const scoreboardElement = document.getElementById("scoreboard");
+    const summaryElement = document.getElementById("summary");
+    const summaryListElement = document.getElementById("summary-list");
 
     function getRandomQuestion() {
-      return questions[Math.floor(Math.random() * questions.length)];
+      let question;
+      do {
+        question = questions[Math.floor(Math.random() * questions.length)];
+      } while (usedQuestions.includes(question));
+      usedQuestions.push(question);
+      return question;
     }
 
     function displayQuestion() {
@@ -136,41 +172,53 @@
       currentQuestion.choices.forEach(choice => {
         const button = document.createElement("button");
         button.textContent = choice;
-        button.className = "bg-gray-700 text-white p-2 m-2 rounded";
+        button.className = "bg-gray-700 text-white p-2 m-2 rounded choice";
         button.addEventListener("click", () => checkAnswer(choice));
         choicesElement.appendChild(button);
       });
     }
 
     function checkAnswer(selectedChoice) {
-      if (selectedChoice === currentQuestion.answer) {
+      let isCorrect = selectedChoice === currentQuestion.answer;
+      answeredQuestions.push({
+        question: currentQuestion.question,
+        selected: selectedChoice,
+        correct: currentQuestion.answer,
+        isCorrect: isCorrect
+      });
+      if (isCorrect) {
         score++;
         feedbackElement.textContent = "Correct!";
-        feedbackElement.className = "feedback correct";
-        feedbackElement.classList.remove("hidden");
+        feedbackElement.classList.remove("hidden", "incorrect");
+        feedbackElement.classList.add("correct");
         setTimeout(() => {
           feedbackElement.classList.add("hidden");
+          feedbackElement.classList.remove("correct");
         }, 500);
       } else {
         score--;
         feedbackElement.textContent = "Incorrect!";
-        feedbackElement.className = "feedback incorrect";
-        feedbackElement.classList.remove("hidden");
+        feedbackElement.classList.remove("hidden", "correct");
+        feedbackElement.classList.add("incorrect");
         setTimeout(() => {
           feedbackElement.classList.add("hidden");
+          feedbackElement.classList.remove("incorrect");
         }, 500);
       }
       scoreElement.textContent = `Score: ${score}`;
-      displayQuestion();
+      if (time > 0) displayQuestion();
     }
 
     function startGame() {
       score = 0;
       time = 60;
+      usedQuestions = [];
+      answeredQuestions = [];
       displayQuestion();
       scoreElement.textContent = `Score: ${score}`;
       timeElement.textContent = `Time: ${time}s`;
       restartButton.classList.add("hidden");
+      summaryElement.classList.add("hidden");
       interval = setInterval(updateTime, 1000);
     }
 
@@ -184,6 +232,7 @@
         restartButton.classList.remove("hidden");
         saveScore();
         displayScores();
+        displaySummary();
       }
     }
 
@@ -197,6 +246,16 @@
     function displayScores() {
       const scores = JSON.parse(localStorage.getItem("aiScores")) || [];
       scoreboardElement.innerHTML = scores.map((s, i) => `<li>${i + 1}. ${s}</li>`).join("");
+    }
+
+    function displaySummary() {
+      summaryElement.classList.remove("hidden");
+      summaryListElement.innerHTML = answeredQuestions.map(q => 
+        `<li class="${q.isCorrect ? 'text-green-500' : 'text-red-500'}">
+          Q: ${q.question}<br>
+          Your Answer: ${q.selected}<br>
+          Correct Answer: ${q.correct}
+        </li>`).join("");
     }
 
     restartButton.addEventListener("click", startGame);
