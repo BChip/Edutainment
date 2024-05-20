@@ -46,13 +46,6 @@
       display: none;
     }
 
-    .fixed-bottom {
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      text-align: center;
-    }
-
     .choices {
       display: flex;
       flex-direction: column;
@@ -84,9 +77,13 @@
     <div id="feedback" class="hidden"></div>
     <p id="score" class="mt-4 text-xl">Score: 0</p>
     <p id="time" class="mt-2 text-xl">Time: 60s</p>
+    <div id="summary" class="hidden mt-4">
+      <h2 class="text-2xl mb-4">Summary of Questions</h2>
+      <ol id="summary-list" class="list-inside"></ul>
+    </div>
     <button id="restart" class="mt-4 p-2 bg-blue-500 text-white rounded hidden">Restart</button>
     <h2 class="text-2xl mt-4">Scoreboard</h2>
-    <ul id="scoreboard" class="list-disc list-inside"></ul>
+    <ul id="scoreboard" class="list-inside"></ul>
   </div>
 
   <script>
@@ -217,10 +214,13 @@
         answer: "Zhou"
       }
     ];
+
     let currentQuestion = {};
     let score = 0;
     let time = 60;
     let interval;
+    let usedQuestions = [];
+    let answeredQuestions = [];
 
     const questionElement = document.getElementById("question");
     const choicesElement = document.getElementById("choices");
@@ -229,9 +229,16 @@
     const feedbackElement = document.getElementById("feedback");
     const restartButton = document.getElementById("restart");
     const scoreboardElement = document.getElementById("scoreboard");
+    const summaryElement = document.getElementById("summary");
+    const summaryListElement = document.getElementById("summary-list");
 
     function getRandomQuestion() {
-      return questions[Math.floor(Math.random() * questions.length)];
+      let question;
+      do {
+        question = questions[Math.floor(Math.random() * questions.length)];
+      } while (usedQuestions.includes(question));
+      usedQuestions.push(question);
+      return question;
     }
 
     function displayQuestion() {
@@ -248,7 +255,14 @@
     }
 
     function checkAnswer(selectedChoice) {
-      if (selectedChoice === currentQuestion.answer) {
+      let isCorrect = selectedChoice === currentQuestion.answer;
+      answeredQuestions.push({
+        question: currentQuestion.question,
+        selected: selectedChoice,
+        correct: currentQuestion.answer,
+        isCorrect: isCorrect
+      });
+      if (isCorrect) {
         score++;
         feedbackElement.textContent = "Correct!";
         feedbackElement.classList.remove("hidden", "incorrect");
@@ -268,16 +282,19 @@
         }, 500);
       }
       scoreElement.textContent = `Score: ${score}`;
-      displayQuestion();
+      if (time > 0) displayQuestion();
     }
 
     function startGame() {
       score = 0;
       time = 60;
+      usedQuestions = [];
+      answeredQuestions = [];
       displayQuestion();
       scoreElement.textContent = `Score: ${score}`;
       timeElement.textContent = `Time: ${time}s`;
       restartButton.classList.add("hidden");
+      summaryElement.classList.add("hidden");
       interval = setInterval(updateTime, 1000);
     }
 
@@ -291,6 +308,7 @@
         restartButton.classList.remove("hidden");
         saveScore();
         displayScores();
+        displaySummary();
       }
     }
 
@@ -304,6 +322,16 @@
     function displayScores() {
       const scores = JSON.parse(localStorage.getItem("historyScores")) || [];
       scoreboardElement.innerHTML = scores.map((s, i) => `<li>${i + 1}. ${s}</li>`).join("");
+    }
+
+    function displaySummary() {
+      summaryElement.classList.remove("hidden");
+      summaryListElement.innerHTML = answeredQuestions.map(q => 
+        `<li class="${q.isCorrect ? 'text-green-500' : 'text-red-500'}">
+          Q: ${q.question}<br>
+          Your Answer: ${q.selected}<br>
+          Correct Answer: ${q.correct}
+        </li>`).join("");
     }
 
     restartButton.addEventListener("click", startGame);
